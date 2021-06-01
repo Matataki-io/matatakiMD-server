@@ -3,7 +3,7 @@ import * as path from 'path';
 
 export default (appInfo: EggAppInfo) => {
   const config = {} as PowerPartial<EggAppConfig>;
-  const domainWhiteList = [ 'http://localhost:3000', 'http://127.0.0.1:3000' ];
+  const domainWhiteList = [ 'http://localhost:3000', 'http://127.0.0.1:3000', 'https://md.mttk.net' ];
 
   // override config from framework / plugin
   // use for cookie sign key, should change to your own and keep security
