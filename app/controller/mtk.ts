@@ -20,8 +20,13 @@ export default class MTKController extends Controller {
       });
 
       ctx.body = result.data;
-    } catch (error) {
-      ctx.body = error;
+    } catch (e) {
+      this.logger.error('e', e);
+
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
     }
   }
   public async userProfile() {
@@ -45,8 +50,12 @@ export default class MTKController extends Controller {
       });
 
       ctx.body = result.data;
-    } catch (error) {
-      ctx.body = error;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
     }
   }
   public async tokenTokenList() {
@@ -70,8 +79,12 @@ export default class MTKController extends Controller {
       });
 
       ctx.body = result.data;
-    } catch (error) {
-      ctx.body = error;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
     }
   }
   public async postPublish() {
@@ -82,7 +95,7 @@ export default class MTKController extends Controller {
       throw new Error('no token');
     }
 
-    const { title, content } = ctx.request.body;
+    const { title, content, shortContent, platform, author, hCaptchaData } = ctx.request.body;
 
     console.log('title', title);
 
@@ -96,22 +109,52 @@ export default class MTKController extends Controller {
         },
         timeout: 60 * 1000,
         data: {
-          author: 'author', cover: '', fissionFactor: 2000,
-          data: { title, author: 'author', content },
-          platform: 'email', signId: null, title, is_original: 0, tags: [],
-          cc_license: null, commentPayPoint: 1, shortContent: content.slice(0, 300), requireToken: [],
+          author, cover: '', fissionFactor: 2000,
+          data: { title, author, content },
+          platform, signId: null, title, is_original: 0, tags: [],
+          cc_license: null, commentPayPoint: 1, shortContent, requireToken: [],
           requireBuy: null, editRequireToken: [], editRequireBuy: null, ipfs_hide: true,
-          assosiateWith: null, hCaptchaData: { expired: false, token: null, eKey: null, error: null },
-          ipfs_or_github: 'ipfs',
+          assosiateWith: null, hCaptchaData, ipfs_or_github: 'ipfs',
         },
       });
 
       console.log('result', result);
 
       ctx.body = result.data;
-    } catch (error) {
-      this.logger.error('error', error);
-      ctx.body = error;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
+    }
+  }
+  public async doINeedHCaptcha() {
+    const { ctx } = this;
+    const token = ctx.header['access-token'];
+
+    if (!token) {
+      throw new Error('no token');
+    }
+
+    try {
+      const result = await ctx.curl(`${this.config.mtkApi}/captcha/doINeedHCaptcha`, {
+        dataType: 'json',
+        method: 'GET',
+        contentType: 'json',
+        headers: {
+          'x-access-token': token,
+        },
+        timeout: 60 * 1000,
+      });
+
+      ctx.body = result.data;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
     }
   }
 }

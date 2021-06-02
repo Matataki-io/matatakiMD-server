@@ -19,4 +19,5 @@ export default (app: Application) => {
   router.get('/api/user/stats', controller.mtk.userProfile);
   router.get('/api/account/list', controller.mtk.accountList);
   router.post('/api/post/publish', controller.mtk.postPublish);
+  router.get('/api/captcha/doINeedHCaptcha', controller.mtk.doINeedHCaptcha);
 };
