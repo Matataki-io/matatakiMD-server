@@ -20,4 +20,5 @@ export default (app: Application) => {
   router.get('/api/account/list', controller.mtk.accountList);
   router.post('/api/post/publish', controller.mtk.postPublish);
   router.get('/api/captcha/doINeedHCaptcha', controller.mtk.doINeedHCaptcha);
+  router.post('/api/posts/importer', controller.mtk.postsImport);
 };

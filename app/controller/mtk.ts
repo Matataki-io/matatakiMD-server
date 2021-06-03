@@ -157,4 +157,45 @@ export default class MTKController extends Controller {
       };
     }
   }
+  public async postsImport() {
+    const { ctx } = this;
+    const token = ctx.header['access-token'];
+
+    if (!token) {
+      throw new Error('no token');
+    }
+
+    const { url } = this.ctx.request.body;
+    console.log('url', url, !url);
+    if (!url) {
+      ctx.body = {
+        code: -1,
+        message: 'URL 不能為空',
+      };
+      return;
+    }
+
+    try {
+      const result = await ctx.curl(`${this.config.mtkApi}/posts/importer`, {
+        dataType: 'json',
+        method: 'POST',
+        contentType: 'json',
+        headers: {
+          'x-access-token': token,
+        },
+        timeout: 60 * 1000,
+        data: {
+          url,
+        },
+      });
+
+      ctx.body = result.data;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
+    }
+  }
 }
