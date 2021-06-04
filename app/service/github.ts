@@ -197,32 +197,62 @@ export default class GithubService extends Service {
       auth: token,
     });
 
-    const { status, data }: octokitState = await octokit.repos.listForUser({
-      username,
-      type: 'owner',
-      sort: 'updated',
-    });
+    let user = {
+      public_repos: 0,
+    };
+    try {
+      const { status: statusUser, data: dataUser }: octokitState = await octokit.rest.users.getAuthenticated();
+      if (statusUser === 200) {
+        user = dataUser;
+      }
+    } catch (e) {
+      this.logger.error(e);
+    }
 
-    this.logger.info('data', data);
+    const count = (user as any).public_repos;
+    const per_page = 100; // default 30 max 100
+    const len = Math.floor(count / per_page) + 1;
+    const list: any[] = [];
 
-    if (status === 200) {
-      const list = data.map((i: any) => ({
-        name: i.name,
-        full_name: i.full_name,
-        private: i.private,
-        owner: {
-          login: i.owner.login,
-        },
-      }));
+    try {
+      for (let i = 1; i <= len; i++) {
+        const { status, data }: octokitState = await octokit.repos.listForUser({
+          username,
+          type: 'owner',
+          sort: 'updated',
+          page: i,
+          per_page,
+        });
+
+        this.logger.info('data', data);
+
+        if (status === 200) {
+        // console.log('data', data)
+          const _list = data.map((i: any) => ({
+            name: i.name,
+            full_name: i.full_name,
+            private: i.private,
+            owner: {
+              login: i.owner.login,
+            },
+          }));
+
+          list.push(...(_list as any));
+        } else {
+          this.logger.error('fail', status);
+        }
+      }
+
       return {
         code: 0,
         data: list,
       };
+    } catch (e) {
+      return {
+        code: -1,
+        message: e.toString(),
+      };
     }
-    return {
-      code: -1,
-      messag: 'error',
-    };
   }
   public async reposBranches({ owner, repo }: reposBranchesProps): Promise<object> {
     const token = await this.getAccountGithubToken();
