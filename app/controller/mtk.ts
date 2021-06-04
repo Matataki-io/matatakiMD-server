@@ -5,7 +5,11 @@ export default class MTKController extends Controller {
     const token = ctx.header['access-token'];
 
     if (!token) {
-      throw new Error('no token');
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
     }
 
     try {
@@ -33,12 +37,15 @@ export default class MTKController extends Controller {
     const { ctx } = this;
     const token = ctx.header['access-token'];
 
+    if (!token) {
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
+    }
+
     try {
-
-      if (!token) {
-        throw new Error('no token');
-      }
-
       const result = await ctx.curl(`${this.config.mtkApi}/user/stats`, {
         dataType: 'json',
         method: 'GET',
@@ -64,7 +71,11 @@ export default class MTKController extends Controller {
     const { pagesize, order } = ctx.request.query;
 
     if (!token) {
-      throw new Error('no token');
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
     }
 
     try {
@@ -92,7 +103,11 @@ export default class MTKController extends Controller {
     const token = ctx.header['access-token'];
 
     if (!token) {
-      throw new Error('no token');
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
     }
 
     const { title, content, shortContent, platform, author, hCaptchaData } = ctx.request.body;
@@ -134,7 +149,11 @@ export default class MTKController extends Controller {
     const token = ctx.header['access-token'];
 
     if (!token) {
-      throw new Error('no token');
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
     }
 
     try {
@@ -162,7 +181,11 @@ export default class MTKController extends Controller {
     const token = ctx.header['access-token'];
 
     if (!token) {
-      throw new Error('no token');
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
     }
 
     const { url } = this.ctx.request.body;
