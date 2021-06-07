@@ -108,6 +108,7 @@ export default class GithubService extends Service {
         owner,
         repo,
         path,
+        ref: branch,
       });
 
       if (resultContentStatus === 200) {
@@ -126,6 +127,7 @@ export default class GithubService extends Service {
       const res = await octokit.repos.createOrUpdateFileContents({
         owner,
         repo,
+        branch,
         path,
         message: commit || `Update ${Date.now()}`,
         content: contentsBase64,
@@ -164,6 +166,7 @@ export default class GithubService extends Service {
       owner,
       repo,
       path,
+      ref: branch,
     });
 
     if (resultContentStatus === 200) {
@@ -224,7 +227,7 @@ export default class GithubService extends Service {
           per_page,
         });
 
-        this.logger.info('data', data);
+        // this.logger.info('data', data);
 
         if (status === 200) {
         // console.log('data', data)
@@ -254,6 +257,7 @@ export default class GithubService extends Service {
       };
     }
   }
+
   public async reposBranches({ owner, repo }: reposBranchesProps): Promise<object> {
     const token = await this.getAccountGithubToken();
 
@@ -273,7 +277,7 @@ export default class GithubService extends Service {
       repo,
     });
 
-    this.logger.info('data', data);
+    // this.logger.info('data', data);
 
     if (status === 200) {
       return {
@@ -287,7 +291,7 @@ export default class GithubService extends Service {
     };
   }
 
-  public async reposContentsList({ owner, repo }): Promise<object> {
+  public async reposContentsList({ owner, repo, branch }): Promise<object> {
     const token = await this.getAccountGithubToken();
 
     if (!token) {
@@ -305,9 +309,10 @@ export default class GithubService extends Service {
       owner,
       repo,
       path: '',
+      ref: branch,
     });
 
-    this.logger.info('data', data);
+    // this.logger.info('data', data);
 
     if (status === 200) {
       const listFilter = data.filter((i: any) => {

@@ -27,7 +27,7 @@ export default class GithubController extends Controller {
   }
   public async reposContentsList(): Promise<any> {
     const { ctx } = this;
-    const { owner, repo } = ctx.request.query;
-    ctx.body = await ctx.service.github.reposContentsList({ owner, repo });
+    const { owner, repo, branch } = ctx.request.query;
+    ctx.body = await ctx.service.github.reposContentsList({ owner, repo, branch });
   }
 }
