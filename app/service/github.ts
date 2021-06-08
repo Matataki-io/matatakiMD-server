@@ -1,40 +1,21 @@
 import { Service } from 'egg';
 import { Octokit } from '@octokit/rest';
 import { isEmpty } from 'lodash';
+import {
+  OctokitState, PushProps, PullProps,
+  UsersReposProps, ReposBranchesProps,
+  ReposListProps, ReposContentsListProps,
+} from '../../typings/index.d';
 
-interface octokitState {
-  status: number
-  data: any
-}
-interface pushProps {
-  contents: string
-  owner: string
-  repo: string
-  path: string
-  branch: string
-  commit: string
-}
-
-interface pullProps {
-  owner: string
-  repo: string
-  path: string
-  branch: string
-}
-
-interface usersReposProps {
-  username: string
-}
-interface reposBranchesProps {
-  owner: string
-  repo: string
-}
 
 /**
  * GithubService
  */
 export default class GithubService extends Service {
 
+  /**
+   * 获取账号的 Github Token
+   */
   private async getAccountGithubToken() {
     const { service } = this;
 
@@ -87,7 +68,8 @@ export default class GithubService extends Service {
       message: 'error',
     };
   }
-  public async push({ contents, owner, repo, path, branch, commit }: pushProps): Promise<object> {
+
+  public async push({ contents, owner, repo, path, branch, commit }: PushProps): Promise<object> {
     const token = await this.getAccountGithubToken();
 
     if (!token) {
@@ -104,7 +86,7 @@ export default class GithubService extends Service {
     });
 
     try {
-      const { status: resultContentStatus, data: resultContent }: octokitState = await octokit.repos.getContent({
+      const { status: resultContentStatus, data: resultContent }: OctokitState = await octokit.repos.getContent({
         owner,
         repo,
         path,
@@ -146,7 +128,8 @@ export default class GithubService extends Service {
       };
     }
   }
-  public async pull({ owner, repo, path, branch }: pullProps): Promise<object> {
+
+  public async pull({ owner, repo, path, branch }: PullProps): Promise<object> {
     const token = await this.getAccountGithubToken();
 
     if (!token) {
@@ -162,7 +145,7 @@ export default class GithubService extends Service {
       auth: token,
     });
 
-    const { status: resultContentStatus, data: resultContent }: octokitState = await octokit.repos.getContent({
+    const { status: resultContentStatus, data: resultContent }: OctokitState = await octokit.repos.getContent({
       owner,
       repo,
       path,
@@ -186,7 +169,7 @@ export default class GithubService extends Service {
     };
   }
 
-  public async usersRepos({ username }: usersReposProps): Promise<object> {
+  public async usersRepos({ username }: UsersReposProps): Promise<object> {
     const token = await this.getAccountGithubToken();
 
     if (!token) {
@@ -204,7 +187,7 @@ export default class GithubService extends Service {
       public_repos: 0,
     };
     try {
-      const { status: statusUser, data: dataUser }: octokitState = await octokit.rest.users.getAuthenticated();
+      const { status: statusUser, data: dataUser }: OctokitState = await octokit.rest.users.getAuthenticated();
       if (statusUser === 200) {
         user = dataUser;
       }
@@ -212,14 +195,14 @@ export default class GithubService extends Service {
       this.logger.error(e);
     }
 
-    const count = (user as any).public_repos;
+    const count = user.public_repos;
     const per_page = 100; // default 30 max 100
     const len = Math.floor(count / per_page) + 1;
-    const list: any[] = [];
+    const list: ReposListProps[] = [];
 
     try {
       for (let i = 1; i <= len; i++) {
-        const { status, data }: octokitState = await octokit.repos.listForUser({
+        const { status, data }: OctokitState = await octokit.repos.listForUser({
           username,
           type: 'owner',
           sort: 'updated',
@@ -231,7 +214,7 @@ export default class GithubService extends Service {
 
         if (status === 200) {
         // console.log('data', data)
-          const _list = data.map((i: any) => ({
+          const _list = data.map((i: ReposListProps) => ({
             name: i.name,
             full_name: i.full_name,
             private: i.private,
@@ -240,7 +223,7 @@ export default class GithubService extends Service {
             },
           }));
 
-          list.push(...(_list as any));
+          list.push(..._list);
         } else {
           this.logger.error('fail', status);
         }
@@ -258,7 +241,7 @@ export default class GithubService extends Service {
     }
   }
 
-  public async reposBranches({ owner, repo }: reposBranchesProps): Promise<object> {
+  public async reposBranches({ owner, repo }: ReposBranchesProps): Promise<object> {
     const token = await this.getAccountGithubToken();
 
     if (!token) {
@@ -272,7 +255,7 @@ export default class GithubService extends Service {
       auth: token,
     });
 
-    const { status, data }: octokitState = await octokit.repos.listBranches({
+    const { status, data }: OctokitState = await octokit.repos.listBranches({
       owner,
       repo,
     });
@@ -305,7 +288,7 @@ export default class GithubService extends Service {
       auth: token,
     });
 
-    const { status, data }: octokitState = await octokit.repos.getContent({
+    const { status, data }: OctokitState = await octokit.repos.getContent({
       owner,
       repo,
       path: '',
@@ -318,7 +301,7 @@ export default class GithubService extends Service {
       const listFilter = data.filter((i: any) => {
         return i.type === 'file' && (i.name).includes('.md');
       });
-      const list = listFilter.map((i: any) => ({
+      const list: ReposContentsListProps[] = listFilter.map((i: any) => ({
         name: i.name,
         path: i.path,
         sha: i.sha,

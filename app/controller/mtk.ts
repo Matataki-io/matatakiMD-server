@@ -33,6 +33,7 @@ export default class MTKController extends Controller {
       };
     }
   }
+
   public async userProfile() {
     const { ctx } = this;
     const token = ctx.header['access-token'];
@@ -65,6 +66,7 @@ export default class MTKController extends Controller {
       };
     }
   }
+
   public async tokenTokenList() {
     const { ctx } = this;
     const token = ctx.header['access-token'];
@@ -98,6 +100,7 @@ export default class MTKController extends Controller {
       };
     }
   }
+
   public async postPublish() {
     const { ctx } = this;
     const token = ctx.header['access-token'];
@@ -111,8 +114,6 @@ export default class MTKController extends Controller {
     }
 
     const { title, content, shortContent, platform, author, hCaptchaData } = ctx.request.body;
-
-    console.log('title', title);
 
     try {
       const result = await ctx.curl(`${this.config.mtkApi}/post/publish`, {
@@ -144,6 +145,7 @@ export default class MTKController extends Controller {
       };
     }
   }
+
   public async doINeedHCaptcha() {
     const { ctx } = this;
     const token = ctx.header['access-token'];
@@ -176,6 +178,7 @@ export default class MTKController extends Controller {
       };
     }
   }
+
   public async postsImport() {
     const { ctx } = this;
     const token = ctx.header['access-token'];
@@ -209,6 +212,101 @@ export default class MTKController extends Controller {
         timeout: 60 * 1000,
         data: {
           url,
+        },
+      });
+
+      ctx.body = result.data;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
+    }
+  }
+
+  public async draftSave() {
+    const { ctx } = this;
+    const token = ctx.header['access-token'];
+
+    if (!token) {
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
+    }
+
+    const { title, content, shortContent } = ctx.request.body;
+
+    if (!title && !content && !shortContent) {
+      ctx.body = {
+        code: -1,
+        message: 'title、content、shortContent 不能為空',
+      };
+      return;
+    }
+
+    try {
+      const result = await ctx.curl(`${this.config.mtkApi}/draft/save`, {
+        dataType: 'json',
+        method: 'POST',
+        contentType: 'json',
+        headers: {
+          'x-access-token': token,
+        },
+        timeout: 60 * 1000,
+        data: {
+          title, content, fissionFactor: 2000,
+          cover: '', is_original: 0, tags: [],
+          assosiate_with: null, commentPayPoint: 0, short_content: shortContent,
+          cc_license: '', ipfs_hide: true, requireToken: [],
+          requireBuy: [], editRequireToken: [],
+        },
+      });
+
+      ctx.body = result.data;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
+    }
+  }
+
+  public async preview() {
+    const { ctx } = this;
+    const token = ctx.header['access-token'];
+
+    if (!token) {
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
+    }
+
+    const { id } = this.ctx.request.body;
+    if (!id) {
+      ctx.body = {
+        code: -1,
+        message: 'ID 不能為空',
+      };
+      return;
+    }
+
+    try {
+      const result = await ctx.curl(`${this.config.mtkApi}/preview`, {
+        dataType: 'json',
+        method: 'POST',
+        contentType: 'json',
+        headers: {
+          'x-access-token': token,
+        },
+        timeout: 60 * 1000,
+        data: {
+          id,
         },
       });
 
