@@ -38,4 +38,8 @@ export default (app: Application) => {
   router.post('/api/draft/save', controller.mtk.draftSave);
   // MTK 草稿预览
   router.post('/api/preview', controller.mtk.preview);
+  // MTK 上传封面
+  router.post('/api/post/uploadImage', controller.mtk.uploadImage);
+  // MTK 文章接口
+  router.get('/api/posts/timeRanking', controller.mtk.postsTimeRanking);
 };

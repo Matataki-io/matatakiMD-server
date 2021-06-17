@@ -113,7 +113,7 @@ export default class MTKController extends Controller {
       return;
     }
 
-    const { title, content, shortContent, platform, author, hCaptchaData } = ctx.request.body;
+    const { title, content, shortContent, platform, author, hCaptchaData, cover } = ctx.request.body;
 
     try {
       const result = await ctx.curl(`${this.config.mtkApi}/post/publish`, {
@@ -125,7 +125,7 @@ export default class MTKController extends Controller {
         },
         timeout: 60 * 1000,
         data: {
-          author, cover: '', fissionFactor: 2000,
+          author, cover, fissionFactor: 2000,
           data: { title, author, content },
           platform, signId: null, title, is_original: 0, tags: [],
           cc_license: null, commentPayPoint: 1, shortContent, requireToken: [],
@@ -307,6 +307,101 @@ export default class MTKController extends Controller {
         timeout: 60 * 1000,
         data: {
           id,
+        },
+      });
+
+      ctx.body = result.data;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
+    }
+  }
+
+  public async uploadImage() {
+    const { ctx } = this;
+    const token = ctx.header['access-token'];
+
+    if (!token) {
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
+    }
+
+    const files = ctx.request.files;
+    this.logger.info('files', files);
+
+    if (!files.length) {
+      ctx.body = {
+        code: -1,
+        message: 'no files',
+      };
+      return;
+    }
+
+    try {
+      const result = await ctx.curl(`${this.config.mtkApi}/post/uploadImage`, {
+        dataType: 'json',
+        method: 'POST',
+        contentType: 'json',
+        headers: {
+          'x-access-token': token,
+        },
+        timeout: 60 * 1000,
+        files: files[0].filepath, // TODO:  暂时支持一张图片
+      });
+
+      ctx.body = result.data;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
+    }
+  }
+
+  public async postsTimeRanking() {
+    const { ctx } = this;
+    const token = ctx.header['access-token'];
+
+    if (!token) {
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
+    }
+
+    const { author, page = 1, pagesize = 20 } = this.ctx.request.query;
+
+    if (!author) {
+      ctx.body = {
+        code: -1,
+        message: 'no author',
+      };
+      return;
+    }
+
+
+    try {
+      const result = await ctx.curl(`${this.config.mtkApi}/posts/timeRanking`, {
+        dataType: 'json',
+        method: 'GET',
+        contentType: 'json',
+        headers: {
+          'x-access-token': token,
+        },
+        timeout: 60 * 1000,
+        data: {
+          author,
+          page,
+          pagesize,
+          extra: 'showAll=0',
         },
       });
 
