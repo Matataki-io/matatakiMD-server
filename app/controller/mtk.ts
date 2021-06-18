@@ -115,6 +115,14 @@ export default class MTKController extends Controller {
 
     const { title, content, shortContent, platform, author, hCaptchaData, cover } = ctx.request.body;
 
+    if (!title || !content || !shortContent || !platform || !author) {
+      ctx.body = {
+        code: -1,
+        message: 'no title、content、shortContent、platform、author',
+      };
+      return;
+    }
+
     try {
       const result = await ctx.curl(`${this.config.mtkApi}/post/publish`, {
         dataType: 'json',
@@ -128,6 +136,60 @@ export default class MTKController extends Controller {
           author, cover, fissionFactor: 2000,
           data: { title, author, content },
           platform, signId: null, title, is_original: 0, tags: [],
+          cc_license: null, commentPayPoint: 1, shortContent, requireToken: [],
+          requireBuy: null, editRequireToken: [], editRequireBuy: null, ipfs_hide: true,
+          assosiateWith: null, hCaptchaData, ipfs_or_github: 'ipfs',
+        },
+      });
+
+      console.log('result', result);
+
+      ctx.body = result.data;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
+    }
+  }
+
+  public async postEdit() {
+    const { ctx } = this;
+    const token = ctx.header['access-token'];
+
+    if (!token) {
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
+    }
+
+    const { signId, title, content, shortContent, platform, author, hCaptchaData, cover } = ctx.request.body;
+
+    if (!signId || !title || !content || !shortContent || !platform || !author) {
+      ctx.body = {
+        code: -1,
+        message: 'no signId、title、content、shortContent、platform、author',
+      };
+      return;
+    }
+
+    try {
+      const result = await ctx.curl(`${this.config.mtkApi}/post/edit`, {
+        dataType: 'json',
+        method: 'POST',
+        contentType: 'json',
+        headers: {
+          'x-access-token': token,
+        },
+        timeout: 60 * 1000,
+        data: {
+          signId,
+          author, cover, fissionFactor: 2000,
+          data: { title, author, content },
+          platform, title, is_original: 0, tags: [],
           cc_license: null, commentPayPoint: 1, shortContent, requireToken: [],
           requireBuy: null, editRequireToken: [], editRequireBuy: null, ipfs_hide: true,
           assosiateWith: null, hCaptchaData, ipfs_or_github: 'ipfs',
@@ -403,6 +465,50 @@ export default class MTKController extends Controller {
           pagesize,
           extra: 'showAll=0',
         },
+      });
+
+      ctx.body = result.data;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
+    }
+  }
+
+  public async postIpfs() {
+    const { ctx } = this;
+    const token = ctx.header['access-token'];
+
+    if (!token) {
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
+    }
+
+    const { hash } = this.ctx.params;
+
+    if (!hash) {
+      ctx.body = {
+        code: -1,
+        message: 'no hash',
+      };
+      return;
+    }
+
+
+    try {
+      const result = await ctx.curl(`${this.config.mtkApi}/post/ipfs/${hash}`, {
+        dataType: 'json',
+        method: 'GET',
+        contentType: 'json',
+        headers: {
+          'x-access-token': token,
+        },
+        timeout: 60 * 1000,
       });
 
       ctx.body = result.data;

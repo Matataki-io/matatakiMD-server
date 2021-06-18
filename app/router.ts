@@ -30,6 +30,8 @@ export default (app: Application) => {
   router.get('/api/account/list', controller.mtk.accountList);
   // MTK 发布文章
   router.post('/api/post/publish', controller.mtk.postPublish);
+  // MTK 更新文章
+  router.post('/api/post/edit', controller.mtk.postEdit);
   // MTK 验证码白名单
   router.get('/api/captcha/doINeedHCaptcha', controller.mtk.doINeedHCaptcha);
   // MTK 导入文章
@@ -42,4 +44,6 @@ export default (app: Application) => {
   router.post('/api/post/uploadImage', controller.mtk.uploadImage);
   // MTK 文章接口
   router.get('/api/posts/timeRanking', controller.mtk.postsTimeRanking);
+  // MTK IPFS 文章
+  router.get('/api/post/ipfs/:hash', controller.mtk.postIpfs);
 };
