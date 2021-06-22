@@ -1,4 +1,5 @@
 import { Controller } from 'egg';
+import { ResponseProps, ResponsePostInfoProps } from '../../typings/index.d';
 export default class MTKController extends Controller {
   public async accountList() {
     const { ctx } = this;
@@ -13,7 +14,7 @@ export default class MTKController extends Controller {
     }
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/account/list`, {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/account/list`, {
         dataType: 'json',
         method: 'GET',
         contentType: 'json',
@@ -47,7 +48,7 @@ export default class MTKController extends Controller {
     }
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/user/stats`, {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/user/stats`, {
         dataType: 'json',
         method: 'GET',
         contentType: 'json',
@@ -81,7 +82,7 @@ export default class MTKController extends Controller {
     }
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/token/tokenlist?pagesize=${pagesize}&order=${order}`, {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/token/tokenlist?pagesize=${pagesize}&order=${order}`, {
         dataType: 'json',
         method: 'GET',
         contentType: 'json',
@@ -124,7 +125,7 @@ export default class MTKController extends Controller {
     }
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/post/publish`, {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/post/publish`, {
         dataType: 'json',
         method: 'POST',
         contentType: 'json',
@@ -136,9 +137,10 @@ export default class MTKController extends Controller {
           author, cover, fissionFactor: 2000,
           data: { title, author, content },
           platform, signId: null, title, is_original: 0, tags: [],
-          cc_license: null, commentPayPoint: 1, shortContent, requireToken: [],
+          cc_license: null, commentPayPoint: 0, shortContent, requireToken: [],
           requireBuy: null, editRequireToken: [], editRequireBuy: null, ipfs_hide: true,
-          assosiateWith: null, hCaptchaData, ipfs_or_github: 'ipfs',
+          assosiateWith: null, hCaptchaData,
+          indie_post: false, indie_sync_tags: false,
         },
       });
 
@@ -177,7 +179,79 @@ export default class MTKController extends Controller {
     }
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/post/edit`, {
+      // 封面 ✅
+
+      // 标签 ✅
+      // 关联Fan票 ✅
+      // cc ✅
+      // 阅读权限 ✅
+      // 支付可见 ✅
+      // 编辑权限 ✅
+      // 支付编辑 ❓ 这个好像测不出来
+      // 是否显示 hash ✅
+      // 原创声明 ✅
+      // 发布到 IPFS / Github ✅（同步标签） 默认 false
+
+      const resultPost = await ctx.curl<ResponseProps<ResponsePostInfoProps>>(`${this.config.mtkApi}/pInfo/${signId}`, {
+        dataType: 'json',
+        method: 'GET',
+        contentType: 'json',
+        headers: {
+          'x-access-token': token,
+        },
+        timeout: 60 * 1000,
+      });
+
+      const { data: resultPostInfo } = resultPost;
+      if (resultPostInfo.code !== 0) {
+        throw new Error('获取文章信息失败');
+      }
+      const { data: resultPostInfoData } = resultPostInfo;
+
+      console.log('resultPostInfoData', resultPostInfoData);
+
+      // 标签
+      const tags = resultPostInfoData.p.tags.map(i => i.name) || [];
+      // 关联 Fan 票
+      const assosiateWith = resultPostInfoData.p.assosiate_with || null;
+      // cc
+      const cc_license = resultPostInfoData.p.cc_license || null;
+      // 阅读权限
+      const requireToken = resultPostInfoData.p.tokens.map(i => {
+        return {
+          tokenId: i.id,
+          amount: i.amount,
+        };
+      }) || [];
+      // 支付可见
+      const requireBuy = resultPostInfoData.p.prices.map(i => {
+        return {
+          tokenId: i.token_id,
+          amount: i.price,
+        };
+      }) || [];
+      // 编辑权限
+      const editRequireToken = resultPostInfoData.p.editTokens.map(i => {
+        return {
+          tokenId: i.id,
+          amount: i.amount,
+        };
+      }) || [];
+      // 支付编辑
+      const editRequireBuy = resultPostInfoData.p.editPrices.map(i => {
+        return {
+          tokenId: i.token_id,
+          amount: i.price,
+        };
+      }) || [];
+      // 是否显示 hash
+      const ipfs_hide = Boolean(resultPostInfoData.p.ipfs_hide);
+      // 原创声明
+      const is_original = Number(resultPostInfoData.p.is_original);
+      // 发布到 IPFS / Github
+      const indie_post = resultPostInfoData.p.hash.startsWith('Gh');
+
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/post/edit`, {
         dataType: 'json',
         method: 'POST',
         contentType: 'json',
@@ -189,13 +263,15 @@ export default class MTKController extends Controller {
           signId,
           author, cover, fissionFactor: 2000,
           data: { title, author, content },
-          platform, title, is_original: 0, tags: [],
-          cc_license: null, commentPayPoint: 1, shortContent, requireToken: [],
-          requireBuy: null, editRequireToken: [], editRequireBuy: null, ipfs_hide: true,
-          assosiateWith: null, hCaptchaData, ipfs_or_github: 'ipfs',
+          platform, title, is_original, tags,
+          cc_license, commentPayPoint: 0, shortContent, requireToken,
+          requireBuy, editRequireToken, editRequireBuy, ipfs_hide,
+          assosiateWith, hCaptchaData,
+          indie_post, indie_sync_tags: false, // 默认 false
         },
       });
 
+      console.log('result', result);
       console.log('result', result);
 
       ctx.body = result.data;
@@ -221,7 +297,7 @@ export default class MTKController extends Controller {
     }
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/captcha/doINeedHCaptcha`, {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/captcha/doINeedHCaptcha`, {
         dataType: 'json',
         method: 'GET',
         contentType: 'json',
@@ -264,7 +340,7 @@ export default class MTKController extends Controller {
     }
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/posts/importer`, {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/posts/importer`, {
         dataType: 'json',
         method: 'POST',
         contentType: 'json',
@@ -310,7 +386,7 @@ export default class MTKController extends Controller {
     }
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/draft/save`, {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/draft/save`, {
         dataType: 'json',
         method: 'POST',
         contentType: 'json',
@@ -359,7 +435,7 @@ export default class MTKController extends Controller {
     }
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/preview`, {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/preview`, {
         dataType: 'json',
         method: 'POST',
         contentType: 'json',
@@ -406,7 +482,7 @@ export default class MTKController extends Controller {
     }
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/post/uploadImage`, {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/post/uploadImage`, {
         dataType: 'json',
         method: 'POST',
         contentType: 'json',
@@ -451,7 +527,7 @@ export default class MTKController extends Controller {
 
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/posts/timeRanking`, {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/posts/timeRanking`, {
         dataType: 'json',
         method: 'GET',
         contentType: 'json',
@@ -501,7 +577,51 @@ export default class MTKController extends Controller {
 
 
     try {
-      const result = await ctx.curl(`${this.config.mtkApi}/post/ipfs/${hash}`, {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/post/ipfs/${hash}`, {
+        dataType: 'json',
+        method: 'GET',
+        contentType: 'json',
+        headers: {
+          'x-access-token': token,
+        },
+        timeout: 60 * 1000,
+      });
+
+      ctx.body = result.data;
+    } catch (e) {
+      this.logger.error('e', e);
+      ctx.body = {
+        code: -1,
+        message: e.toString(),
+      };
+    }
+  }
+
+  public async pInfo() {
+    const { ctx } = this;
+    const token = ctx.header['access-token'];
+
+    if (!token) {
+      ctx.body = {
+        code: -1,
+        message: 'no token',
+      };
+      return;
+    }
+
+    const { id } = this.ctx.params;
+
+    if (!id) {
+      ctx.body = {
+        code: -1,
+        message: 'no id',
+      };
+      return;
+    }
+
+
+    try {
+      const result = await ctx.curl<ResponseProps<any>>(`${this.config.mtkApi}/pInfo/${id}`, {
         dataType: 'json',
         method: 'GET',
         contentType: 'json',

@@ -53,3 +53,61 @@ export interface ReposContentsListProps {
   html_url: string
   type: string
 }
+
+export interface ResponseProps<T> {
+  code: number
+  message: string
+  data: T
+}
+
+export interface ResponsePostInfoProps {
+  p: {
+    id: number
+    title: string
+    hash: string
+    tags: {
+      id: number
+      name: string
+    }[]
+    assosiate_with: number
+    cc_license: string
+    tokens: {
+      "id": number,
+      "amount": number,
+      "name": string,
+      "symbol": string,
+      "decimals": number,
+      "logo": string
+    }[]
+    prices: {
+      "token_id": number
+      "platform": string
+      "price": number
+      "decimals": number
+      "stock_quantity": number
+      "symbol": string
+      "logo": string|null
+      "name": string|null
+    }[]
+    editTokens: {
+      "id": number,
+      "amount": number,
+      "name": string,
+      "symbol": string,
+      "decimals": number,
+      "logo": string
+    }[]
+    editPrices: {
+      "token_id": number
+      "platform": string
+      "price": number
+      "decimals": number
+      "stock_quantity": number
+      "symbol": string
+      "logo": string|null
+      "name": string|null
+    }[]
+    ipfs_hide: number
+    is_original: number
+  }
+}

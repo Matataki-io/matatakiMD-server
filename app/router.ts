@@ -46,4 +46,6 @@ export default (app: Application) => {
   router.get('/api/posts/timeRanking', controller.mtk.postsTimeRanking);
   // MTK IPFS 文章
   router.get('/api/post/ipfs/:hash', controller.mtk.postIpfs);
+  // MTK 文章详情
+  router.get('/api/pInfo/:id', controller.mtk.pInfo);
 };
