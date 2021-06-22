@@ -144,7 +144,7 @@ export default class MTKController extends Controller {
         },
       });
 
-      console.log('result', result);
+      this.logger.info('result', result);
 
       ctx.body = result.data;
     } catch (e) {
@@ -208,7 +208,7 @@ export default class MTKController extends Controller {
       }
       const { data: resultPostInfoData } = resultPostInfo;
 
-      console.log('resultPostInfoData', resultPostInfoData);
+      this.logger.info('resultPostInfoData', resultPostInfoData);
 
       // 标签
       const tags = resultPostInfoData.p.tags.map(i => i.name) || [];
@@ -271,8 +271,7 @@ export default class MTKController extends Controller {
         },
       });
 
-      console.log('result', result);
-      console.log('result', result);
+      this.logger.info('result', result);
 
       ctx.body = result.data;
     } catch (e) {
@@ -330,7 +329,7 @@ export default class MTKController extends Controller {
     }
 
     const { url } = this.ctx.request.body;
-    console.log('url', url, !url);
+    this.logger.info('url', url, !url);
     if (!url) {
       ctx.body = {
         code: -1,
