@@ -47,7 +47,7 @@ export default class GithubService extends Service {
     if (!token) {
       return {
         code: -1,
-        message: 'no token',
+        message: 'no github token',
       };
     }
 
