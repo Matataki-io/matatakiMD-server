@@ -23,3 +23,6 @@ config/**/*.map
 
 config/config.local.ts
 config/config.prod.ts
+
+!config/**/config.example.ts
+!config/**/config.default.example.ts
